@@ -6,5 +6,7 @@ import { Bobba } from '@bobba/core';
   const bobba = Bobba.getInstance();
   await bobba.init();
 
+  bobba.load();
+
   console.log('Bobba is ready!');
 })();

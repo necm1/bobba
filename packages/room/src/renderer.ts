@@ -1,10 +1,15 @@
-import { Container, Point, SCALE_MODES, Texture } from 'pixi.js';
+import { Container, Point, Sprite, Texture } from 'pixi.js';
 import { Room } from './room';
 import { Bobba } from '@bobba/core';
 import { RoomTileAsset } from './asset/tile.asset';
 import { RoomTileEntity } from './entity/tile.entity';
 import { ParsedTileType } from './type/parsed-tile.type';
 import { Vector2D, Vector3D } from '@bobba/utils';
+import { ParsedTileWall } from './type/parsed-tile-wall.type';
+import { RoomWallRightEntity } from './entity/wall-right.entity';
+import { RoomWallLeftEntity } from './entity/wall-left.entity';
+import { RoomWallOuterCornerEntity } from './entity/wall-outer-corner.entity';
+import { RoomEntityData } from './type/room-entity-data.type';
 
 export class RoomRenderer extends Container {
   private _hideWalls = false;
@@ -27,10 +32,16 @@ export class RoomRenderer extends Container {
   private _wallHitAreaLayer: Container = new Container();
   private _masksLayer: Container = new Container();
 
-  private _wallTexture: RoomTileAsset | undefined;
-  private _floorTexture: Texture | undefined;
+  private _wallLeftColor: number | undefined;
+  private _wallRightColor: number | undefined;
+  private _wallTopColor: number | undefined;
+
+  private _tileLeftColor: number | undefined;
+  private _tileRightColor: number | undefined;
+  private _tileTopColor: number | undefined;
 
   // private _walls: (WallLeft | WallRight | WallOuterCorner)[] = [];
+  private _walls: (RoomWallLeftEntity | RoomWallOuterCornerEntity)[] = [];
   private _tiles: RoomTileEntity[] = [];
   // private _tileCursors: TileCursor[] = [];
   // private _masks: Map<string, RoomLandscapeMaskSprite> = new Map();
@@ -79,6 +90,9 @@ export class RoomRenderer extends Container {
     await this.room.floorAsset
       .load()
       .then(() => console.log('Floor asset loaded'));
+    await this.room.wallAsset
+      .load()
+      .then(() => console.log('Wall asset loaded'));
 
     // this.room.wallAsset.load();
   }
@@ -92,16 +106,32 @@ export class RoomRenderer extends Container {
       }
     }
 
+    await this._updateEntities();
+
     this._roomLayerContainer.x = -this.roomBounds.minX;
     this._roomLayerContainer.y = -this.roomBounds.minY;
   }
 
+  private async _updateEntities(): Promise<void> {
+    [...this._tiles, ...this._walls].forEach(
+      async (tile) => await tile.update(this.currentRoomEntityData)
+    );
+  }
+
   private async _renderEntity(element: ParsedTileType, { x, y }: Vector2D) {
     switch (element.type) {
+      case 'wall': {
+        await this._renderWall({ x, y }, element);
+        break;
+      }
       case 'tile': {
         await this._renderTile({ x, y, z: element.z });
         break;
       }
+
+      case 'door':
+        await this._renderDoor({ x, y, z: element.z });
+        break;
     }
   }
 
@@ -128,6 +158,113 @@ export class RoomRenderer extends Container {
       x: xPos,
       y: yPos - roomZ * 32,
     };
+  }
+
+  private async _renderDoor({ x, y, z }: Vector3D): Promise<void> {
+    await this._renderTile({ x, y, z }, this._behindWallLayer);
+    this._renderLeftWall({ x, y, z, hideBorder: false, cutHeight: 90 });
+  }
+
+  private async _renderWall({ x, y }: Vector2D, element: ParsedTileWall) {
+    if (this._hideWalls || this._hideFloor) {
+      return;
+    }
+
+    const height = element.height;
+
+    switch (element.kind) {
+      case 'colWall':
+        await this._renderRightWall({
+          x,
+          y,
+          z: height,
+          hideBorder: element.hideBorder,
+        });
+        break;
+      case 'rowWall':
+        await this._renderLeftWall({
+          x,
+          y,
+          z: height,
+          hideBorder: element.hideBorder,
+        });
+        break;
+
+      case 'innerCorner':
+        this._renderRightWall({ x, y, z: height });
+        this._renderLeftWall({ x, y, z: height, hideBorder: true });
+        break;
+
+      case 'outerCorner':
+        await this._renderOuterCornerWall({ x, y, z: height });
+        break;
+    }
+  }
+
+  private async _renderOuterCornerWall({
+    x: roomX,
+    y: roomY,
+    z: roomZ,
+  }: Vector3D): Promise<void> {
+    const wall = new RoomWallOuterCornerEntity(this.room, {});
+
+    const { x, y } = this._getPosition(roomX + 1, roomY, roomZ);
+    wall.x = x;
+    wall.y = y;
+    wall.roomZ = roomZ;
+
+    await wall.render();
+
+    this._wallLayer.addChild(wall);
+    this._walls.push(wall);
+  }
+
+  private async _renderLeftWall({
+    x,
+    y,
+    z,
+    hideBorder = false,
+    cutHeight,
+  }: Vector3D & { hideBorder?: boolean; cutHeight?: number }) {
+    const wall = new RoomWallLeftEntity(this.room, {
+      hideBorder,
+      hitAreaContainer: this._wallHitAreaLayer,
+      cutHeight,
+    });
+
+    const { x: actualX, y: actualY } = this._getPosition(x + 1, y, z);
+    wall.x = actualX;
+    wall.y = actualY;
+    wall.roomZ = z;
+
+    await wall.render();
+
+    console.log('Left wall', wall);
+
+    this._wallLayer.addChild(wall);
+    this._walls.push(wall);
+  }
+
+  private async _renderRightWall({
+    x,
+    y,
+    z,
+    hideBorder = false,
+  }: Vector3D & { hideBorder?: boolean }) {
+    const wall = new RoomWallRightEntity(this.room, {
+      hideBorder,
+      hitAreaContainer: this._wallHitAreaLayer,
+    });
+
+    const { x: actualX, y: actualY } = this._getPosition(x, y + 1, z);
+    wall.x = actualX + 32;
+    wall.y = actualY;
+    wall.roomZ = z;
+
+    await wall.render();
+
+    this._wallLayer.addChild(wall);
+    this._walls.push(wall);
   }
 
   private async _renderTile({ x, y, z }: Vector3D, container?: Container) {
@@ -187,5 +324,27 @@ export class RoomRenderer extends Container {
       minY: this._tileMapBounds.minY + minOffsetY,
       maxY: this._tileMapBounds.maxY + maxOffsetY,
     };
+  }
+
+  private get currentRoomEntityData(): RoomEntityData {
+    return {
+      borderWidth: this._borderWidth,
+      tileHeight: this._tileHeight,
+      wallHeight: this.largestWallHeight,
+      wallLeftColor: this._wallLeftColor ?? 0x91949f,
+      wallRightColor: this._wallRightColor ?? 0xbbbecd,
+      wallTopColor: this._wallTopColor ?? 0x70727b,
+      tileLeftColor: this._tileLeftColor ?? 0x838357,
+      tileRightColor: this._tileRightColor ?? 0x666644,
+      tileTopColor: this._tileTopColor ?? 0x989865,
+      tileTexture: this.room.floorAsset ?? Texture.WHITE,
+      wallTexture: this.room.wallAsset ?? Texture.WHITE,
+      // masks: this._masks,
+      masks: new Map<string, Sprite>(),
+    };
+  }
+
+  private get largestWallHeight() {
+    return this.room.tileMap.parsedTileMap.largestDiff * 32 + this._wallHeight;
   }
 }

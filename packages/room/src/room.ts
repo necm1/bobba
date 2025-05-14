@@ -5,6 +5,7 @@ import { RoomRenderer } from './renderer';
 import { RoomTileAsset } from './asset/tile.asset';
 import { RoomCamera } from './camera';
 import { Bobba } from '@bobba/core';
+import { RoomWallAsset } from './asset/wall.asset';
 
 /**
  * @class Room
@@ -17,6 +18,7 @@ export class Room extends Container {
   private _renderer: RoomRenderer;
 
   private _floorAsset: RoomTileAsset;
+  private _wallAsset: RoomWallAsset;
 
   private _camera: RoomCamera;
 
@@ -29,6 +31,7 @@ export class Room extends Container {
     this._tileMap = new RoomTileMap(config.tileMap);
 
     this._floorAsset = new RoomTileAsset(config.bobba, 111);
+    this._wallAsset = new RoomWallAsset(config.bobba, 101);
 
     this._renderer = new RoomRenderer(config.bobba, this);
     this.addChild(this._renderer);
@@ -59,6 +62,10 @@ export class Room extends Container {
 
   public get floorAsset(): RoomTileAsset {
     return this._floorAsset;
+  }
+
+  public get wallAsset(): RoomWallAsset {
+    return this._wallAsset;
   }
 
   public get roomHeight(): number {

@@ -4,8 +4,12 @@ import { Room } from '../room';
 import { RoomAsset } from '../interface/room-asset.interface';
 import { Container, Point, Texture, TilingSprite } from 'pixi.js';
 import { RoomMatrix } from '../matrix';
+import { RoomEntityData } from '../type/room-entity-data.type';
 
-export class RoomTileEntity extends RoomEntity<RoomTileEntityConfiguration> {
+export class RoomTileEntity extends RoomEntity<
+  RoomTileEntityConfiguration,
+  RoomEntityData
+> {
   private _entityLayerContainer?: Container;
   private _tileContainers: Container[] = [];
 
@@ -86,8 +90,10 @@ export class RoomTileEntity extends RoomEntity<RoomTileEntityConfiguration> {
     this.addChild(this._entityLayerContainer);
   }
 
-  public override async update(): Promise<void> {
-    console.log('update tile entity');
+  public override async update(data: RoomEntityData): Promise<void> {
+    this._tileHeight = data.tileHeight;
+    this._asset = data.tileTexture;
+    await this.render();
   }
 
   public override destroy(): void {

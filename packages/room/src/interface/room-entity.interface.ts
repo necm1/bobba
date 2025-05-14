@@ -1,7 +1,7 @@
 import { Container } from 'pixi.js';
 import { Room } from 'src/room';
 
-export abstract class RoomEntity<T = unknown> extends Container {
+export abstract class RoomEntity<T = unknown, K = unknown> extends Container {
   constructor(
     private readonly _room: Room,
     private readonly _configuration: T
@@ -13,7 +13,7 @@ export abstract class RoomEntity<T = unknown> extends Container {
     throw new Error('Method not implemented.');
   }
 
-  public async update(): Promise<void> {
+  public async update(data: K): Promise<void> {
     throw new Error('Method not implemented.');
   }
 

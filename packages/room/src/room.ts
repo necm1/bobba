@@ -34,8 +34,8 @@ export class Room extends Container {
   public async render(): Promise<void> {
     await this.renderer.render();
     this._camera = new RoomCamera(this);
+
     this._bobba.app.stage.addChild(this._camera);
-    // this._camera.centerCamera();
   }
 
   public get bobba(): Bobba {

@@ -1,6 +1,5 @@
 import { Room } from '../room';
 import { Container } from 'pixi.js';
-import { RoomAsset } from '../interface/room-asset.interface';
 import {
   RoomWallLeftEntity,
   RoomWallLeftEntityConfiguration,
@@ -9,7 +8,6 @@ import {
 export type RoomWallRightEntityConfiguration = {
   hideBorder: boolean;
   hitAreaContainer: Container;
-  asset?: RoomAsset;
 };
 
 export class RoomWallRightEntity extends RoomWallLeftEntity {

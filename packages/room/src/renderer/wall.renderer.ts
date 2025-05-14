@@ -66,8 +66,6 @@ export class RoomWallRenderer extends Renderer<RoomWallRendererConfiguration> {
 
   public override async prepareAssets(): Promise<void> {
     await this.room.wallAsset.load();
-
-    console.log('RoomWallRenderer prepareAssets');
   }
 
   public async renderOuterCornerWall({

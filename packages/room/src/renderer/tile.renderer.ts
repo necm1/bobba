@@ -2,15 +2,21 @@ import { Container, Point } from 'pixi.js';
 import { Renderer } from '../interface/renderer.interface';
 import { RoomTileEntity } from '../entity/tile.entity';
 import { Vector3D } from '@bobba/utils';
+import { RoomStairEntity } from '../entity/stair.entity';
+import { RoomStairCornerEntity } from 'src/entity/stair-corner.entity';
 
 type RoomTileRendererConfiguration = {
   hideFloor: boolean;
   tileHeight: number;
+  tileLeftColor?: string;
+  tileRightColor?: string;
+  tileTopColor?: string;
 };
 
 export class RoomTileRenderer extends Renderer<RoomTileRendererConfiguration> {
   private _tileLayer = new Container();
-  private _tiles: RoomTileEntity[] = [];
+  private _tiles: (RoomTileEntity | RoomStairEntity | RoomStairCornerEntity)[] =
+    [];
 
   public override async render({ x, y, z }: Vector3D, container?: Container) {
     if (this.configuration.hideFloor) {
@@ -20,6 +26,9 @@ export class RoomTileRenderer extends Renderer<RoomTileRendererConfiguration> {
     const tile = new RoomTileEntity(this.room, {
       color: '#eeeeee',
       height: this.configuration.tileHeight,
+      tileTopColor: this.configuration.tileTopColor,
+      tileLeftColor: this.configuration.tileLeftColor,
+      tileRightColor: this.configuration.tileRightColor,
     });
 
     const xEven = x % 2 === 0;
@@ -48,7 +57,11 @@ export class RoomTileRenderer extends Renderer<RoomTileRendererConfiguration> {
     await this.room.floorAsset.load();
   }
 
-  public get tiles(): RoomTileEntity[] {
+  public get tiles(): (
+    | RoomTileEntity
+    | RoomStairEntity
+    | RoomStairCornerEntity
+  )[] {
     return this._tiles;
   }
 

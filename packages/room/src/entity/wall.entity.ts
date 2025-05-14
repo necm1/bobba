@@ -1,8 +1,6 @@
 import { RoomTileEntityConfiguration } from '../interface/room-tile-entity-configuration.interface';
 import { RoomEntity } from '../interface/room-entity.interface';
 import { Room } from '../room';
-import { RoomAsset } from '../interface/room-asset.interface';
-import { Vector2D } from '@bobba/utils';
 import { Container, Point, Texture, TilingSprite } from 'pixi.js';
 import { RoomMatrix } from '../matrix';
 
@@ -10,7 +8,6 @@ export class RoomWallEntity extends RoomEntity<RoomTileEntityConfiguration> {
   private _container?: Container;
   private _sprites: Container[] = [];
 
-  private _asset: RoomAsset;
   private _color: string;
 
   private _tileHeight: number;
@@ -19,11 +16,7 @@ export class RoomWallEntity extends RoomEntity<RoomTileEntityConfiguration> {
   constructor(room: Room, configuration: RoomTileEntityConfiguration) {
     super(room, configuration);
 
-    this._asset = configuration.asset || room.floorAsset;
-
-    if (!configuration.asset) {
-      this._asset.load();
-    }
+    this.asset = configuration.asset || room.floorAsset;
 
     this._color = configuration.color || '#ffffff';
     this._tileHeight = configuration.height;
@@ -34,7 +27,7 @@ export class RoomWallEntity extends RoomEntity<RoomTileEntityConfiguration> {
     this._container = new Container();
 
     const tileMatrix = RoomMatrix.getFloorMatrix(0, 0);
-    const texture = this._asset.texture ?? Texture.WHITE;
+    const texture = this.asset?.texture ?? Texture.WHITE;
     const tile = new TilingSprite(texture);
 
     tile.tilePosition = this._tilePositions;

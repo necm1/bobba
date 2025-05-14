@@ -1,12 +1,12 @@
+import { Bobba } from '@bobba/core';
+import { Vector2D, Vector3D } from '@bobba/utils';
 import { Container, Sprite, Texture } from 'pixi.js';
 import { Room } from '../room';
-import { Bobba } from '@bobba/core';
-import { RoomTileEntity } from '../entity/tile.entity';
 import { ParsedTileType } from '../type/parsed-tile.type';
-import { Vector2D, Vector3D } from '@bobba/utils';
 import { RoomEntityData } from '../type/room-entity-data.type';
-import { RoomWallRenderer } from './wall.renderer';
 import { RoomTileRenderer } from './tile.renderer';
+import { RoomWallRenderer } from './wall.renderer';
+import { RoomStairRenderer } from './stair.renderer';
 
 export class RoomRenderer extends Container {
   private _hideWalls = false;
@@ -14,6 +14,7 @@ export class RoomRenderer extends Container {
 
   private _roomWallRenderer: RoomWallRenderer;
   private _roomTileRenderer: RoomTileRenderer;
+  private _roomStairRenderer: RoomStairRenderer;
 
   private _tileMapBounds: {
     minX: number;
@@ -36,7 +37,6 @@ export class RoomRenderer extends Container {
   private _tileRightColor: number | undefined;
   private _tileTopColor: number | undefined;
 
-  private _tiles: RoomTileEntity[] = [];
   // private _tileCursors: TileCursor[] = [];
   // private _masks: Map<string, RoomLandscapeMaskSprite> = new Map();
 
@@ -70,6 +70,18 @@ export class RoomRenderer extends Container {
     this._roomTileRenderer = new RoomTileRenderer({
       hideFloor: this.hideFloor,
       tileHeight: this._tileHeight,
+      tileTopColor: this._tileTopColor?.toString(),
+      tileLeftColor: this._tileLeftColor?.toString(),
+      tileRightColor: this._tileRightColor?.toString(),
+      ...deps,
+    });
+
+    this._roomStairRenderer = new RoomStairRenderer({
+      tileHeight: this._tileHeight,
+      tileTopColor: (this._tileTopColor ?? 0x989865).toString(),
+      tileLeftColor: (this._tileLeftColor ?? 0x838357).toString(),
+      tileRightColor: (this._tileRightColor ?? 0x666644).toString(),
+      roomTileRenderer: this._roomTileRenderer,
       ...deps,
     });
   }
@@ -95,13 +107,13 @@ export class RoomRenderer extends Container {
     this.addChild(this._roomLayerContainer);
 
     this._renderTileMap();
-    console.log('Room renderer rendered', this._tiles);
   }
 
   public async prepareAssets(): Promise<void> {
     await Promise.all([
       this._roomTileRenderer.prepareAssets(),
       this._roomWallRenderer.prepareAssets(),
+      this._roomStairRenderer.prepareAssets(),
     ]);
   }
 
@@ -139,6 +151,21 @@ export class RoomRenderer extends Container {
 
       case 'door':
         await this._renderDoor({ x, y, z: element.z });
+        break;
+
+      case 'stairs':
+        await this._roomStairRenderer.render(
+          { x, y, z: element.z },
+          false,
+          element.kind
+        );
+        break;
+      case 'stairCorner':
+        await this._roomStairRenderer.render(
+          { x, y, z: element.z },
+          true,
+          element.kind
+        );
         break;
     }
   }

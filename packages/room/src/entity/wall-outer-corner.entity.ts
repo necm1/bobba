@@ -1,5 +1,8 @@
 import { Room } from '../room';
-import { RoomEntity } from '../interface/room-entity.interface';
+import {
+  RoomEntity,
+  RoomEntityConfiguration,
+} from '../interface/room-entity.interface';
 import { Matrix, Texture, TilingSprite } from 'pixi.js';
 import { RoomEntityData } from '../type/room-entity-data.type';
 
@@ -13,7 +16,7 @@ export class RoomWallOuterCornerEntity extends RoomEntity<
 
   private _roomZ = 0;
 
-  constructor(room: Room, configuration: unknown) {
+  constructor(room: Room, configuration: RoomEntityConfiguration) {
     super(room, configuration);
   }
 

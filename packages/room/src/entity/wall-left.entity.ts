@@ -41,16 +41,10 @@ export class RoomWallLeftEntity extends RoomEntity<
 
   private _hitAreaLayer: Container | undefined;
 
-  private _asset: RoomAsset;
-
   constructor(room: Room, configuration: RoomWallLeftEntityConfiguration) {
     super(room, configuration);
 
-    this._asset = configuration.asset || room.wallAsset;
-
-    if (!configuration.asset) {
-      this._asset.load();
-    }
+    this.asset = configuration.asset || room.wallAsset;
 
     this._hideBorder = configuration.hideBorder;
   }
@@ -99,7 +93,7 @@ export class RoomWallLeftEntity extends RoomEntity<
     this._wallLeftColor = data.wallLeftColor;
     this._wallRightColor = data.wallRightColor;
     this._wallTopColor = data.wallTopColor;
-    this._asset = data.wallTexture;
+    this.asset = data.wallTexture;
 
     await this.render();
   }
@@ -111,7 +105,7 @@ export class RoomWallLeftEntity extends RoomEntity<
   }
 
   private _createPrimaryLayer(): TilingSprite {
-    const sprite = new TilingSprite(this._asset.texture ?? Texture.WHITE);
+    const sprite = new TilingSprite(this.asset?.texture ?? Texture.WHITE);
     sprite.setSize(this._wallWidth, this.wallHeight);
 
     sprite.setFromMatrix(new Matrix(-1, 0.5, 0, 1));

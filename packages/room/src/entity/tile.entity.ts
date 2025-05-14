@@ -1,7 +1,6 @@
 import { RoomTileEntityConfiguration } from '../interface/room-tile-entity-configuration.interface';
 import { RoomEntity } from '../interface/room-entity.interface';
 import { Room } from '../room';
-import { RoomAsset } from '../interface/room-asset.interface';
 import { Container, Point, Texture, TilingSprite } from 'pixi.js';
 import { RoomMatrix } from '../matrix';
 import { RoomEntityData } from '../type/room-entity-data.type';
@@ -13,7 +12,6 @@ export class RoomTileEntity extends RoomEntity<
   private _entityLayerContainer?: Container;
   private _tileContainers: Container[] = [];
 
-  private _asset: RoomAsset;
   private _color: string;
 
   private _tileHeight: number;
@@ -22,13 +20,13 @@ export class RoomTileEntity extends RoomEntity<
   constructor(room: Room, configuration: RoomTileEntityConfiguration) {
     super(room, configuration);
 
-    this._asset = configuration.asset || room.floorAsset;
+    this.asset = configuration.asset || room.floorAsset;
 
     if (!configuration.asset) {
-      this._asset.load();
+      this.asset.load();
     }
 
-    this._color = configuration.color || '#ffffff';
+    this._color = configuration.color || '#989865';
     this._tileHeight = configuration.height;
   }
 
@@ -40,7 +38,7 @@ export class RoomTileEntity extends RoomEntity<
 
     const tileMatrix = RoomMatrix.getFloorMatrix(0, 0);
 
-    const texture = this._asset.texture ?? Texture.WHITE;
+    const texture = this.asset?.texture ?? Texture.WHITE;
 
     const tile = new TilingSprite();
     tile.texture = texture;
@@ -49,7 +47,7 @@ export class RoomTileEntity extends RoomEntity<
 
     tile.setSize(32, 32);
     tile.setFromMatrix(tileMatrix);
-    tile.tint = 0x989865;
+    tile.tint = this.configuration.tileTopColor ?? 0x989865;
 
     const borderLeftMatrix = RoomMatrix.getLeftMatrix(0, 0, {
       width: 32,
@@ -67,14 +65,14 @@ export class RoomTileEntity extends RoomEntity<
 
     borderLeft.setFromMatrix(borderLeftMatrix);
     borderLeft.setSize(32, this._tileHeight);
-    borderLeft.tint = 0x838357;
+    borderLeft.tint = this.configuration.tileLeftColor ?? 0x838357;
 
     const borderRight = new TilingSprite(texture);
     borderRight.tilePosition = this._tilePositions;
 
     borderRight.setFromMatrix(borderRightMatrix);
     borderRight.setSize(32, this._tileHeight);
-    borderRight.tint = 0x666644;
+    borderRight.tint = this.configuration.tileRightColor ?? 0x666644;
 
     // Cache the textures
     borderRight.updateCacheTexture();
@@ -92,7 +90,7 @@ export class RoomTileEntity extends RoomEntity<
 
   public override async update(data: RoomEntityData): Promise<void> {
     this._tileHeight = data.tileHeight;
-    this._asset = data.tileTexture;
+    this.asset = data.tileTexture;
     await this.render();
   }
 
@@ -114,7 +112,7 @@ export class RoomTileEntity extends RoomEntity<
 
   set color(value) {
     this._color = value;
-    // this._updateSprites();
+    this.render();
   }
 
   public get tilePositions() {

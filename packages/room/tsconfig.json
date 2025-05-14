@@ -4,13 +4,13 @@
   "include": [],
   "references": [
     {
-      "path": "../../packages/room"
+      "path": "../utils"
     },
     {
-      "path": "../../packages/core"
+      "path": "../core"
     },
     {
-      "path": "./tsconfig.app.json"
+      "path": "./tsconfig.lib.json"
     }
   ]
 }

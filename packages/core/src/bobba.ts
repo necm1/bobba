@@ -1,16 +1,13 @@
-import { Application, Sprite, Texture, extensions } from 'pixi.js';
+import { Application, Sprite, Texture, ICanvas, RenderLayer } from 'pixi.js';
 import { AssetManager } from '@bobba/utils';
 
 export class Bobba {
   private static instance: Bobba;
   public app: Application;
   public backgroundSprite: Sprite;
-  public canvas: HTMLCanvasElement;
-  public assetManager: AssetManager;
-
-  private constructor() {
-    // Initialize the asset manager
-  }
+  public canvas: ICanvas;
+  public assetManager: AssetManager = AssetManager.getInstance();
+  public layer = new RenderLayer();
 
   /**
    * @method getInstance
@@ -27,55 +24,16 @@ export class Bobba {
   }
 
   public async init() {
-    this.app = new Application();
-
-    await this.app.init({
-      backgroundColor: 0x1099bb,
-      resizeTo: window,
-      height: window.innerHeight,
-      width: window.innerWidth,
-      antialias: false,
-      resolution: window.devicePixelRatio,
-      autoDensity: true,
-      // sharedTicker: true,
-      eventMode: 'passive',
-    });
-
-    this.canvas = this.app.canvas;
-
-    const gradientTexture = this.createGradientTexture(
-      document.body.clientWidth,
-      document.body.clientHeight,
-      [
-        [0, '#0B5A80'],
-        [1, '#0B3A65'],
-      ]
-    );
-
-    // TODO add to asset manager
-    this.backgroundSprite = new Sprite(gradientTexture);
-    this.app.stage.addChildAt(this.backgroundSprite, 0);
-
-    // TODO add to event manager
-
-    window.addEventListener('resize', () => {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-
-      this.app.renderer.resize(w, h);
-
-      this.backgroundSprite.width = window.innerWidth;
-      this.backgroundSprite.height = window.innerHeight;
-    });
+    await this._initializePixiApplication();
+    await this._setupBackground();
+    this._addResizeListener();
 
     document.body.appendChild(this.app.canvas);
   }
 
   public async load(): Promise<void> {
-    this.assetManager = AssetManager.getInstance();
-
     await this.assetManager.loadAssets({
-      'room/materials': 'http://127.0.0.1:8081/generic/room/room_data.json',
+      'room/assets': 'http://127.0.0.1:8081/generic/room/room_data.json',
       'room/room': 'http://127.0.0.1:8081/generic/room/room.json',
       'room/cursors':
         'http://127.0.0.1:8081/generic/tile_cursor/tile_cursor.json',
@@ -98,11 +56,82 @@ export class Bobba {
     console.log('Assets loaded');
   }
 
+  /**
+   * Destroys the Bobba instance and releases resources.
+   * @public
+   */
+  public destroy(): void {
+    this.app.destroy(true, { children: true });
+    window.removeEventListener('resize', this._addResizeListener);
+    console.log('Bobba instance destroyed.');
+  }
+
+  /**
+   * Initializes the PixiJS application.
+   * @private
+   */
+  private async _initializePixiApplication(): Promise<void> {
+    this.app = new Application();
+
+    await this.app.init({
+      backgroundColor: 0x1099bb,
+      resizeTo: window,
+      height: window.innerHeight,
+      width: window.innerWidth,
+      antialias: false,
+      resolution: window.devicePixelRatio,
+      autoDensity: true,
+      eventMode: 'passive',
+    });
+
+    this.canvas = this.app.canvas;
+
+    // this.layer..enableSort = true;
+    this.app.stage.addChild(this.layer);
+  }
+
+  /**
+   * Sets up the background gradient texture and adds it to the stage.
+   * @private
+   */
+  private async _setupBackground(): Promise<void> {
+    return new Promise<void>((res) => {
+      const texture = this.createGradientTexture(
+        document.body.clientWidth,
+        document.body.clientHeight,
+        [
+          [0, '#0B5A80'],
+          [1, '#0B3A65'],
+        ]
+      );
+
+      this.backgroundSprite = new Sprite(texture);
+      this.app.stage.addChildAt(this.backgroundSprite, 0);
+
+      res();
+    });
+  }
+
+  /**
+   * Adds a resize event listener to handle window resizing.
+   * @private
+   */
+  private _addResizeListener(): void {
+    window.addEventListener('resize', () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+
+      this.app.renderer.resize(w, h);
+      this.backgroundSprite.width = w;
+      this.backgroundSprite.height = h;
+    });
+  }
+
   private createGradientTexture(
     width: number,
     height: number,
     colorStops: [number, string][]
-  ) {
+  ): Texture {
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;

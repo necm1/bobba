@@ -1,5 +1,6 @@
 import { Assets, Texture, Spritesheet, Cache } from 'pixi.js';
 import { Manager } from '../interface';
+import { EventEmitter } from 'events';
 
 /**
  * @class AssetManager
@@ -21,6 +22,7 @@ export class AssetManager implements Manager {
   private static instance: AssetManager;
 
   private assets: Map<string, Promise<Texture | Spritesheet>> = new Map();
+  // private eventEmitter: EventEmitter = new EventEmitter();
 
   /**
    * @method getInstance
@@ -44,21 +46,26 @@ export class AssetManager implements Manager {
     manifest: Record<string, string>,
     cache = true
   ): Promise<void> {
-    await Promise.all(
-      Object.entries(manifest).map(([key, path]) =>
-        this.loadAsset(key, path, cache)
-      )
-    );
+    try {
+      await Promise.all(
+        Object.entries(manifest).map(([key, path]) =>
+          this.loadAsset(key, path, cache)
+        )
+      );
+      // this.emit('resources.loaded', manifest);
+    } catch (error) {
+      console.error('Error loading assets:', error);
+      // this.emit('resources.error', error);
+    }
   }
 
   public async loadAsset(
     key: string,
-    assetPath: string,
+    assetPath: string | Texture | Spritesheet,
     cache = true
   ): Promise<void> {
     if (this.assets.has(key)) {
       await this.assets.get(key);
-      console.log('Asset exists loading:', key);
       return;
     }
 
@@ -72,16 +79,23 @@ export class AssetManager implements Manager {
         },
       });
 
-      this.assets.set(key, Assets.load(key));
-      await this.assets.get(key);
-    }
+      const assetPromise = Assets.load(key);
+      this.assets.set(key, assetPromise);
 
-    return undefined;
+      try {
+        await assetPromise;
+        console.log(`Asset ${key} loaded successfully`);
+        // this.emit('asset.loaded', { key, assetPath });
+      } catch (error) {
+        console.error(`Error loading asset ${key}:`, error);
+        // this.emit('asset.error', { key, error });
+      }
+    }
   }
 
-  public async get(key: string): Promise<Texture | Spritesheet> {
+  public async get(key: string): Promise<any> {
     if (this.assets.has(key)) {
-      return (await this.assets.get(key)) as Texture | Spritesheet;
+      return await this.assets.get(key);
     }
 
     const asset = Assets.get(key);
@@ -97,14 +111,15 @@ export class AssetManager implements Manager {
     return Assets.unload(assetPath);
   }
 
-  // on(event: string, callback: Function) {
-  //   // Register an event listener for the given event
-  //   // this.events.set(event, callback);
-  //   // Assets.on(event, callback);
-  //   // Assets.on(event, callback);
+  // public on(event: string, listener: (data: unknown) => void): void {
+  //   this.eventEmitter.on(event, listener);
   // }
 
-  // off(event: string, callback: Function) {
-  //   // Unregister an event listener for the given event
+  // public off(event: string, listener: (data: unknown) => void): void {
+  //   this.eventEmitter.off(event, listener);
+  // }
+
+  // private emit(event: string, data: unknown): void {
+  //   this.eventEmitter.emit(event, data);
   // }
 }

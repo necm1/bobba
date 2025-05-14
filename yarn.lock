@@ -1351,17 +1351,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bobba/asset-manager@workspace:packages/asset-manager":
-  version: 0.0.0-use.local
-  resolution: "@bobba/asset-manager@workspace:packages/asset-manager"
-  dependencies:
-    tslib: "npm:^2.3.0"
-  languageName: unknown
-  linkType: soft
-
 "@bobba/bobba@workspace:apps/bobba":
   version: 0.0.0-use.local
   resolution: "@bobba/bobba@workspace:apps/bobba"
+  languageName: unknown
+  linkType: soft
+
+"@bobba/converter@workspace:apps/converter":
+  version: 0.0.0-use.local
+  resolution: "@bobba/converter@workspace:apps/converter"
   languageName: unknown
   linkType: soft
 
@@ -1377,6 +1375,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@bobba/room@workspace:packages/room"
   dependencies:
+    gsap: "npm:^3.13.0"
     tslib: "npm:^2.3.0"
   languageName: unknown
   linkType: soft
@@ -5622,6 +5621,13 @@ __metadata:
   version: 1.4.0
   resolution: "graphemer@npm:1.4.0"
   checksum: 10c0/e951259d8cd2e0d196c72ec711add7115d42eb9a8146c8eeda5b8d3ac91e5dd816b9cd68920726d9fd4490368e7ed86e9c423f40db87e2d8dfafa00fa17c3a31
+  languageName: node
+  linkType: hard
+
+"gsap@npm:^3.13.0":
+  version: 3.13.0
+  resolution: "gsap@npm:3.13.0"
+  checksum: 10c0/a42dd2e02467a4abe96409aaf6cd0e5d697c72e05ec13c18c2271330493983aa63cc717c9dd0740fda2f884d0f56c7b98fc18b13500f0c1da94864985840da7c
   languageName: node
   linkType: hard
 

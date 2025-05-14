@@ -1,18 +1,12 @@
 import { Container } from 'pixi.js';
 import { RoomConfiguration } from './interface/room-configuration.interface';
 import { RoomTileMap } from './tile-map';
-import { RoomRenderer } from './renderer';
+import { RoomRenderer } from './renderer/room.renderer';
 import { RoomTileAsset } from './asset/tile.asset';
 import { RoomCamera } from './camera';
 import { Bobba } from '@bobba/core';
 import { RoomWallAsset } from './asset/wall.asset';
 
-/**
- * @class Room
- * @description The Room class represents a room in the Bobba system.
- * It is responsible for managing the room's state, events, and interactions.
- * It is a singleton class, meaning that only one instance of the Room class can exist at a time.
- */
 export class Room extends Container {
   private _tileMap: RoomTileMap;
   private _renderer: RoomRenderer;

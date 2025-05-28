@@ -7,6 +7,7 @@ import { RoomEntityData } from '../type/room-entity-data.type';
 import { RoomTileRenderer } from './tile.renderer';
 import { RoomWallRenderer } from './wall.renderer';
 import { RoomStairRenderer } from './stair.renderer';
+import { RoomTileCursorRenderer } from './tile-cursor.renderer';
 
 export class RoomRenderer extends Container {
   private _hideWalls = false;
@@ -15,6 +16,7 @@ export class RoomRenderer extends Container {
   private _roomWallRenderer: RoomWallRenderer;
   private _roomTileRenderer: RoomTileRenderer;
   private _roomStairRenderer: RoomStairRenderer;
+  private _roomTileCursorRenderer: RoomTileCursorRenderer;
 
   private _tileMapBounds: {
     minX: number;
@@ -84,6 +86,11 @@ export class RoomRenderer extends Container {
       roomTileRenderer: this._roomTileRenderer,
       ...deps,
     });
+
+    this._roomTileCursorRenderer = new RoomTileCursorRenderer({
+      primaryLayer: this._primaryLayer,
+      ...deps,
+    });
   }
 
   public async render(): Promise<void> {
@@ -146,6 +153,11 @@ export class RoomRenderer extends Container {
       }
       case 'tile': {
         await this._roomTileRenderer.render({ x, y, z: element.z });
+        await this._roomTileCursorRenderer.render({
+          x,
+          y,
+          z: element.z,
+        });
         break;
       }
 
@@ -159,6 +171,17 @@ export class RoomRenderer extends Container {
           false,
           element.kind
         );
+
+        await this._roomTileCursorRenderer.render({
+          x,
+          y,
+          z: element.z,
+        });
+        await this._roomTileCursorRenderer.render({
+          x,
+          y,
+          z: element.z + 1,
+        });
         break;
       case 'stairCorner':
         await this._roomStairRenderer.render(
@@ -166,6 +189,17 @@ export class RoomRenderer extends Container {
           true,
           element.kind
         );
+
+        await this._roomTileCursorRenderer.render({
+          x,
+          y,
+          z: element.z,
+        });
+        await this._roomTileCursorRenderer.render({
+          x,
+          y,
+          z: element.z + 1,
+        });
         break;
     }
   }
@@ -182,6 +216,15 @@ export class RoomRenderer extends Container {
       hideBorder: false,
       cutHeight: 90,
     });
+
+    await this._roomTileCursorRenderer.render(
+      {
+        x,
+        y,
+        z: z,
+      },
+      this._roomWallRenderer.behindWallLayer
+    );
   }
 
   public get hideWalls() {
